@@ -26,8 +26,17 @@ Mesh::Mesh(void) :
     positionBufferId_(0),
     texCoordBufferId_(0),
     normalBufferId_(0),
-    elementBufferId_(0)
+    elementBufferId_(0),
+    position_(0.0f, 0.0f, 0.0f),
+    rotation_(Matrix3Glf::Identity())
 {}
+
+Mesh::~Mesh(void) {
+    glDeleteVertexArrays(1, &vertexArrayObjectId_);
+    glDeleteBuffers(1, &positionBufferId_);
+    glDeleteBuffers(1, &texCoordBufferId_);
+    glDeleteBuffers(1, &elementBufferId_);
+}
 
 void Mesh::loadFromObj(const std::string& fileName) {
     std::vector<std::array<float, 4>> positions;
@@ -189,10 +198,34 @@ void Mesh::loadFromObj(const std::string& fileName) {
 }
 
 void Mesh::render(const Shader& shader, const Camera& camera, const Vector3Glf& color) const {
-    shader.useShader(camera.getVP(), color);
+    shader.useShader(camera.getVP() * getOrientation(), color);
     glBindVertexArray(vertexArrayObjectId_);
 
     glDrawElements(GL_TRIANGLES, nIndices_, GL_UNSIGNED_INT, (GLvoid*)0);
 
     glBindVertexArray(0);
+}
+
+void Mesh::render(const Shader& shader, const Camera& camera, const Joint& joint, const Vector3Glf& color) const {
+    shader.useShader(camera.getVP() * joint.getOrientation(), color);
+    glBindVertexArray(vertexArrayObjectId_);
+
+    glDrawElements(GL_TRIANGLES, nIndices_, GL_UNSIGNED_INT, (GLvoid*)0);
+
+    glBindVertexArray(0);
+}
+
+void Mesh::setPosition(const Vector3Glf& position) {
+    position_ = position;
+}
+
+void Mesh::setRotation(const Matrix3Glf& rotation) {
+    rotation_ = rotation;
+}
+
+Matrix4Glf Mesh::getOrientation(void) const {
+    Matrix4Glf o;
+    o << rotation_          , position_ ,
+         0.0f, 0.0f, 0.0f   , 1.0f      ;
+    return std::move(o);
 }

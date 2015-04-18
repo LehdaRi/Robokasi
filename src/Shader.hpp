@@ -25,7 +25,8 @@ public:
     Shader(const std::string& vsFileName, const std::string& fsFileName);
 
     GLuint getId(void) const;
-    void useShader(const Matrix4Glf& mvp, const Vector3Glf& color) const;
+    void useShader(const Matrix4Glf& mvp,
+                   const Vector3Glf& color = Vector3Glf(1.0f, 1.0f, 1.0f)) const;
 
 private:
     GLuint programId_;
