@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    main.cpp
+
+    @version    0.1
+    @author     Miika 'LehdaRi' Lehtimäki
+    @date       2015-04-18
+
+**/
+
+
 #include "Mesh.hpp"
 #include "Shader.hpp"
 

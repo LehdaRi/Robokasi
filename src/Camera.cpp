@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Camera.cpp
+
+    @version    0.1
+    @author     Miika 'LehdaRi' Lehtimäki
+    @date       2015-04-18
+
+**/
+
+
 #include "Camera.hpp"
 
 

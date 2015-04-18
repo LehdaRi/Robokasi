@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Shader.hpp
+
+    @version    0.1
+    @author     Miika 'LehdaRi' Lehtimäki
+    @date       2015-04-18
+
+**/
+
+
 #ifndef ROBOKASI_SHADER_HPP
 #define ROBOKASI_SHADER_HPP
 

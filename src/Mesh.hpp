@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Mesh.hpp
+
+    @version    0.1
+    @author     Miika 'LehdaRi' Lehtimäki
+    @date       2015-04-18
+
+**/
+
+
 #ifndef ROBOKASI_MESH_HPP
 #define ROBOKASI_MESH_HPP
 

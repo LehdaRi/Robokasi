@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Shader.cpp
+
+    @version    0.1
+    @author     Miika 'LehdaRi' Lehtimäki
+    @date       2015-04-18
+
+**/
+
+
 #include "Shader.hpp"
 
 #include <cstdio>
