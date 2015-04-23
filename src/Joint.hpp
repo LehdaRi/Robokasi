@@ -37,7 +37,7 @@ public:
     //  Apply previous joint transformation to this joint
     void applyJoint(const Joint& other);
 
-    const Matrix4Glf& getOrientation(void) const;
+    Matrix4Glf getOrientation(void) const;
 
     void setPosition(const Vector3Glf& position);
     void setRotation(const Matrix3Glf& rotation);
@@ -53,6 +53,7 @@ private:
 
     Matrix4Glf orientation_;
     Matrix4Glf orientationNext_;
+    Matrix4Glf orientation2_;
 
     Shader& shader_;
     GLuint posBuffer_;

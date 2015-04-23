@@ -70,14 +70,47 @@ void Joint::setDHParameters(float theta, float d, float r, float alpha) {
                         st      , ct*ca     , -ct*sa    , r*st  ,
                         0.0f    , sa        , ca        , d     ,
                         0.0f    , 0.0f      , 0.0f      , 1.0f  ;
+
+    orientation2_ << ct     , -st   , 0.0f  , 0.0f  ,
+                     st     , ct    , 0.0f  , 0.0f  ,
+                     0.0f   , 0.0f  , 1.0f  , d     ,
+                     0.0f   , 0.0f  , 0.0f  , 1.0f  ;
+
+    std::array<float, 3> pos[] = {
+        refFrameVertexPosData__[0],
+        refFrameVertexPosData__[1],
+        refFrameVertexPosData__[2],
+        refFrameVertexPosData__[3],
+        refFrameVertexPosData__[4],
+        refFrameVertexPosData__[5],
+        {0.0f, 0.0f, 0.0f},
+        {0.0f, 0.0f, d}
+    };
+
+    std::array<float, 3> col[8] = {
+        refFrameVertexColData__[0],
+        refFrameVertexColData__[1],
+        refFrameVertexColData__[2],
+        refFrameVertexColData__[3],
+        refFrameVertexColData__[4],
+        refFrameVertexColData__[5],
+        {1.0f, 1.0f, 1.0f},
+        {1.0f, 1.0f, 1.0f}
+    };
+
+    glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pos), pos, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(col), col, GL_STATIC_DRAW);
 }
 
 void Joint::applyJoint(const Joint& other) {
     orientation_ = other.orientation_ * other.orientationNext_;
 }
 
-const Matrix4Glf& Joint::getOrientation(void) const {
-    return orientation_;
+Matrix4Glf Joint::getOrientation(void) const {
+    return orientation_ * orientation2_;
 }
 
 void Joint::setPosition(const Vector3Glf& position) {
@@ -99,7 +132,7 @@ void Joint::draw(const Camera& camera) const {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
-    glDrawArrays(GL_LINES, 0, 6);
+    glDrawArrays(GL_LINES, 0, 8);
 
     glDisableVertexAttribArray(0);
 }
