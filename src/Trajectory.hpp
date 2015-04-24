@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Trajectory.hpp
+
+    @version    0.1
+    @author     Veikka Kähkönen
+    @date       2015-04-24
+
+**/
+
+
 #include "LinearAlgebra.hpp"
 #include <vector>
 
@@ -7,6 +19,5 @@ public:
 	std::vector<Vector3Glf>& getTrajectory();
 
 private:
-	std::vector<std::string> split(const char *str, char c = ' ');
 	std::vector<Vector3Glf> trajectory_;
 };

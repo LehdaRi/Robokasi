@@ -1,3 +1,15 @@
+/**
+
+    Automaatio- ja Systeemitekniikan killan robokäsiprojekti
+    Trajectory.cpp
+
+    @version    0.1
+    @author     Veikka Kähkönen
+    @date       2015-04-24
+
+**/
+
+
 #include "Trajectory.hpp"
 #include "LinearAlgebra.hpp"
 #include <fstream>
@@ -5,6 +17,22 @@
 #include <string>
 #include <sstream>
 #include <vector>
+
+
+namespace {
+	std::vector<std::string> split(const char *str, char c) {
+	    std::vector<std::string> result;
+	    do
+	    {
+	        const char *begin = str;
+	        while(*str != c && *str)
+	            str++;
+	        result.push_back(std::string(begin, str));
+	    } while (0 != *str++);
+	    return result;
+	}
+}
+
 
 void Trajectory::loadFromFile(const std::string& fileName, const float dt) {
 	std::ifstream f (fileName);
@@ -38,17 +66,4 @@ void Trajectory::loadFromFile(const std::string& fileName, const float dt) {
 
 std::vector<Vector3Glf>& Trajectory::getTrajectory() {
 	return this->trajectory_;
-}
-
-std::vector<std::string> Trajectory::split(const char *str, char c)
-{
-    std::vector<std::string> result;
-    do
-    {
-        const char *begin = str;
-        while(*str != c && *str)
-            str++;
-        result.push_back(std::string(begin, str));
-    } while (0 != *str++);
-    return result;
 }
