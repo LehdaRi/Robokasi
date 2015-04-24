@@ -1,5 +1,7 @@
 bin/
 obj/
+build/
+temp_trajectory_test*
 *.cbp
 *.layout
 *.depend
