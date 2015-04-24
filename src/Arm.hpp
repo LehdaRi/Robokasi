@@ -23,6 +23,9 @@ class Arm {
 public:
     Arm(Shader& shader, std::vector<Matrix4Glf> matrices);
 
+    void setJointTheta(unsigned jointId, float theta);
+    void draw(const Camera& camera) const;
+
     void solve(Vector3Glf goal_point, int life_count);
     Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
     Vector3Glf calculate_end_effector(int segment_num = -1);
@@ -34,3 +37,4 @@ private:
 
 
 #endif // ROBOKASI_ARM_HPP
+

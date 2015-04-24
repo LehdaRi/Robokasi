@@ -15,11 +15,6 @@
 #include <iostream>
 
 
-Arm::Arm(Shader& shader, std::vector<Matrix4Glf> matrices) {
-    for (auto& m : matrices)
-        joints_.emplace_back(shader, m);
-}
-
 template<typename _Matrix_Type_>
 _Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon =
 std::numeric_limits<double>::epsilon())
@@ -31,6 +26,32 @@ std::numeric_limits<double>::epsilon())
         return svd.matrixV() *  (svd.singularValues().array().abs() >
     tolerance).select(svd.singularValues().array().inverse(),
     0).matrix().asDiagonal() * svd.matrixU().adjoint();
+}
+
+
+Arm::Arm(Shader& shader, std::vector<Matrix4Glf> matrices) {
+    for (auto& m : matrices)
+        joints_.emplace_back(shader, m);
+}
+
+void Arm::setJointTheta(unsigned jointId, float theta) {
+    if (jointId >= joints_.size())
+        return;
+
+    joints_[jointId].setTheta(theta);
+
+    /*if (jointId < joints_.size())
+        for (auto i=jointId; i<joints_.size()-1; ++i)
+            joints_[i+i].applyJoint(joints_[i]);*/
+
+    for (auto i=0u; i<joints_.size()-1; ++i) {
+        joints_[i+1].applyJoint(joints_[i]);
+    }
+}
+
+void Arm::draw(const Camera& camera) const {
+    for (auto& j : joints_)
+        j.draw(camera);
 }
 
 void Arm::solve(Vector3Glf goal_point, int life_count) {

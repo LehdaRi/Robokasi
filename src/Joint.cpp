@@ -13,6 +13,7 @@
 #include "Joint.hpp"
 
 #include <GL/glew.h>
+#include <iostream> // TEMP
 
 
 ///  Static members
@@ -160,19 +161,19 @@ float Joint::getLength(void) const {
 }
 
 Vector3Glf Joint::getRight(void) const {
-    return (jointMatrix_ * Vector4Glf(1.0f, 0.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+    return (getOrientation() * Vector4Glf(1.0f, 0.0f, 0.0f, 1.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getUp(void) const {
-    return (jointMatrix_ * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+    return (getOrientation() * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getForward(void) const {
-    return (jointMatrix_ * Vector4Glf(0.0f, 0.0f, 1.0f, 1.0f)).block<1, 3>(0, 0);
+    return (getOrientation() * Vector4Glf(0.0f, 0.0f, 1.0f, 1.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getEndPoint(void) const {
-    return (orientation_ * jointMatrix_ * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+    return (getOrientation() * jointMatrix_ * Vector4Glf(0.0f, 0.0f, 0.0f, 1.0f)).block<3, 1>(0, 0);
 }
 
 void Joint::setJointMatrix(const Matrix4Glf& m) {
@@ -199,7 +200,7 @@ float Joint::getTheta(void) const {
 }
 
 void Joint::draw(const Camera& camera) const {
-    shader_.useShader(camera.getVP() * orientation_ * rotZ_);
+    shader_.useShader(camera.getVP() * getOrientation());
 
     glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
     glEnableVertexAttribArray(0);
