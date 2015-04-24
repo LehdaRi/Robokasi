@@ -32,12 +32,15 @@ public:
     Joint& operator=(Joint&& other)       = delete;
 
     //  Set Denavit-Hartenberg parameters for next joint
-    void setDHParameters(float theta, float d, float r, float alpha);
+    void setDHParameters(float theta, float r, float d, float alpha);
 
     //  Apply previous joint transformation to this joint
     void applyJoint(const Joint& other);
 
     Matrix4Glf getOrientation(void) const;
+
+    void setJointMatrix(const Matrix4Glf& m);
+    void setTheta(float theta);
 
     void setPosition(const Vector3Glf& position);
     void setRotation(const Matrix3Glf& rotation);
@@ -52,8 +55,10 @@ private:
     Matrix3Glf rotation_;
 
     Matrix4Glf orientation_;
+    Matrix4Glf orientationVis_;
     Matrix4Glf orientationNext_;
-    Matrix4Glf orientation2_;
+    float theta_;
+    Matrix4Glf rotZ_;
 
     Shader& shader_;
     GLuint posBuffer_;
