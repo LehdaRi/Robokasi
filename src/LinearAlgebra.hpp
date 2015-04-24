@@ -42,8 +42,8 @@ void clamp(Eigen::Matrix<T, W, H, Eigen::DontAlign>& matrix, const T& min, const
 //  Clamps all values in given matrix in range specified
 template<typename T, int W, int H>
 void clamp(Eigen::Matrix<T, W, H, Eigen::DontAlign>& matrix, const T& min, const T& max) {
-    for (auto x=0; x<W; ++x)
-        for (auto y=0; y<H; ++y)
+    for (int x=0; x<W; ++x)
+        for (int y=0; y<H; ++y)
             if (matrix(x, y) < min)
                 matrix(x, y) = min;
             else if (matrix(x, y) > max)

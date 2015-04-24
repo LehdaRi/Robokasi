@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-18
+    @date       2015-04-24
 
 **/
 
@@ -23,13 +23,13 @@
 
 class Joint {
 public:
-    Joint(Shader& shader);
+    Joint(Shader& shader, const Matrix4Glf& jointMatrix);
     ~Joint(void);
 
-    Joint(const Joint& other)             = delete;
-    Joint(Joint&& other)                  = delete;
-    Joint& operator=(const Joint& other)  = delete;
-    Joint& operator=(Joint&& other)       = delete;
+    Joint(const Joint& other);
+    Joint(Joint&& other);
+    Joint& operator=(const Joint& other);
+    Joint& operator=(Joint&& other);
 
     //  Set Denavit-Hartenberg parameters for next joint
     void setDHParameters(float theta, float r, float d, float alpha);
@@ -38,12 +38,18 @@ public:
     void applyJoint(const Joint& other);
 
     Matrix4Glf getOrientation(void) const;
+    float getLength(void) const;
+
+    Vector3Glf getRight(void) const;
+    Vector3Glf getUp(void) const;
+    Vector3Glf getForward(void) const;
+
+    Vector3Glf getEndPoint(void) const;
 
     void setJointMatrix(const Matrix4Glf& m);
+    const Matrix4Glf& getJointMatrix(void) const;
     void setTheta(float theta);
-
-    void setPosition(const Vector3Glf& position);
-    void setRotation(const Matrix3Glf& rotation);
+    float getTheta(void) const;
 
     void draw(const Camera& camera) const;
 
@@ -51,12 +57,8 @@ private:
     static std::array<float, 3> refFrameVertexPosData__[6];
     static std::array<float, 3> refFrameVertexColData__[6];
 
-    Vector3Glf position_;
-    Matrix3Glf rotation_;
-
     Matrix4Glf orientation_;
-    Matrix4Glf orientationVis_;
-    Matrix4Glf orientationNext_;
+    Matrix4Glf jointMatrix_;
     float theta_;
     Matrix4Glf rotZ_;
 

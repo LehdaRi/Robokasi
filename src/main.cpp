@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-18
+    @date       2015-04-24
 
 **/
 
@@ -151,10 +151,6 @@ int main()
             j6.draw(camera);
             glEnable(GL_DEPTH_TEST);
 
-            /*camera.lookAt(Vector3Glf(55.0f*sinf(t), 55.0f*cosf(t), 40.0f),
-                          Vector3Glf(0.0f, 0.0f, 15.0f),
-                          Vector3Glf(0.0f, 0.0f, 1.0f));*/
-                            // theta        a           d       alpha
             j0.setJointMatrix(jm0);
             j0.setTheta(0.3f * t);
 
@@ -170,30 +166,8 @@ int main()
             j4.setJointMatrix(jm4);
             j4.setTheta(0+t*0.1f);
 
-             j5.setJointMatrix(jm5);
+            j5.setJointMatrix(jm5);
             j5.setTheta(PI+t);
-
-            //j1.setDHParameters(PI*0.5f,   -5.5f,     0.0f,     PI*0.5f);
-            //j2.setDHParameters(0.2f,      0.0f,     -5.5f,     PI*0.5f);
-            //j1.setDHParameters(t*0.2f,      -5.5f,     0.0f,     PI*0.5f);
-            //j2.setDHParameters(0.4f,       17.0f,     0.0f,       0.0f);
-            //j3.setDHParameters(t*0.27f,     17.05f,     0.0f,   PI*0.5f);
-            /*j4.setDHParameters(t*0.31f,     0.0f,       0.0f,   -PI*0.5f);
-            j5.setDHParameters(t*0.49f,     2.2f,       0.0f,   PI*0.5f);*/
-
-            /*j0.setDHParameters(t*0.25f,     0.0f,       0.0f,       -PI*0.5f);
-            j1.setDHParameters(0.0f,        14.909f,    43.909f,    0.0f);
-            j2.setDHParameters(t*0.4f,      0.0f,       2.03f,      PI*0.5f);
-            j3.setDHParameters(t*0.27f,     43.307f,    0.0f,       -PI*0.5f);
-            j4.setDHParameters(t*0.31f,     0.0f,       0.0f,       PI*0.5f);
-            j5.setDHParameters(t*0.49f,     5.625f,     0.0f,       0.0f);*/
-
-            /*j0.setDHParameters(t*0.25f,     0.0f,       0.0f,       PI*0.5f);
-            j1.setDHParameters(t*0.35f,     0.0f,       43.18f,     0.0f);
-            j2.setDHParameters(t*0.4f,      15.0f,      2.03f,      -PI*0.5f);
-            j3.setDHParameters(t*0.27f,     43.18f,     0.0f,       PI*0.5f);
-            j4.setDHParameters(t*0.31f,     0.0f,       0.0f,       -PI*0.5f);
-            j5.setDHParameters(t*0.49f,     0.0f,       0.0f,       0.0f);*/
 
             j1.applyJoint(j0);
             j2.applyJoint(j1);

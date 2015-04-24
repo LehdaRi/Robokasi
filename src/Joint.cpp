@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-18
+    @date       2015-04-24
 
 **/
 
@@ -38,11 +38,11 @@ std::array<float, 3> Joint::refFrameVertexColData__[] = {
 
 ///  Member function definitions
 
-Joint::Joint(Shader& shader) :
-    position_(0.0f, 0.0f, 0.0f),
-    rotation_(Matrix3Glf::Identity()),
+Joint::Joint(Shader& shader, const Matrix4Glf& jointMatrix) :
     orientation_(Matrix4Glf::Identity()),
-    orientationNext_(Matrix4Glf::Identity()),
+    jointMatrix_(jointMatrix),
+    theta_(0.0f),
+    rotZ_(Matrix4Glf::Identity()),
     shader_(shader),
     posBuffer_(0),
     colBuffer_(0)
@@ -54,6 +54,66 @@ Joint::Joint(Shader& shader) :
     glGenBuffers(1, &colBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+}
+
+Joint::Joint(const Joint& other) :
+    orientation_(other.orientation_),
+    jointMatrix_(other.jointMatrix_),
+    theta_(other.theta_),
+    rotZ_(other.rotZ_),
+    shader_(other.shader_),
+    posBuffer_(0),
+    colBuffer_(0)
+{
+    glGenBuffers(1, &posBuffer_);
+    glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexPosData__), refFrameVertexPosData__, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &colBuffer_);
+    glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+}
+
+Joint::Joint(Joint&& other) :
+    orientation_(other.orientation_),
+    jointMatrix_(other.jointMatrix_),
+    theta_(other.theta_),
+    rotZ_(other.rotZ_),
+    shader_(other.shader_),
+    posBuffer_(0),
+    colBuffer_(0)
+{
+    glGenBuffers(1, &posBuffer_);
+    glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexPosData__), refFrameVertexPosData__, GL_STATIC_DRAW);
+
+    glGenBuffers(1, &colBuffer_);
+    glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+
+    glDeleteBuffers(1, &other.posBuffer_);
+    glDeleteBuffers(1, &other.colBuffer_);
+}
+
+Joint& Joint::operator=(const Joint& other) {
+    orientation_ = other.orientation_;
+    jointMatrix_ = other.jointMatrix_;
+    theta_ = other.theta_;
+    rotZ_ = other.rotZ_;
+
+    return *this;
+}
+
+Joint& Joint::operator=(Joint&& other) {
+    orientation_ = other.orientation_;
+    jointMatrix_ = other.jointMatrix_;
+    theta_ = other.theta_;
+    rotZ_ = other.rotZ_;
+
+    glDeleteBuffers(1, &other.posBuffer_);
+    glDeleteBuffers(1, &other.colBuffer_);
+
+    return *this;
 }
 
 Joint::~Joint(void) {
@@ -71,94 +131,56 @@ void Joint::rotY(float theta){
                 0.0f, 0.0f, 1.0f, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f;
 
-    orientation_ =  other.orientation_ * rotT * other.orientationNext_;
+    orientation_ =  other.orientation_ * rotT * other.jointMatrix_;
 }
 */
 
-void Joint::setDHParameters(float theta, float r, float d, float alpha) {
+/*void Joint::setDHParameters(float theta, float r, float d, float alpha) {
     float st = sinf(theta);
     float ct = cosf(theta);
     float sa = sinf(alpha);
     float ca = cosf(alpha);
 
-    Matrix4Glf transD, transR, rotA, rotT;
-
-    transD <<   1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, d   ,
-                0.0f, 0.0f, 0.0f, 1.0f;
-
-    transR <<   1.0f, 0.0f, 0.0f, r   ,
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f;
-
-    rotA   <<   1.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, ca  , -sa , 0.0f,
-                0.0f, sa  , ca  , 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f;
-
-    rotT   <<   ct  , -st , 0.0f, 0.0f,
-                st  , ct  , 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f;
-
-    //orientationNext_ = rotA * transR * rotT * transD;
-    orientationNext_ = transD * rotT * transR * rotA;
-    orientationVis_ = rotT * orientation_;
-
-    /*orientationNext_ << ct      , -st*ca    , st*sa     , r*ct  ,
+    jointMatrix_ << ct      , -st*ca    , st*sa     , r*ct  ,
                         st      , ct*ca     , -ct*sa    , r*st  ,
                         0.0f    , sa        , ca        , d     ,
-                        0.0f    , 0.0f      , 0.0f      , 1.0f  ;*/
-
-    /*orientationVis_ << ct     , -st   , 0.0f  , 0.0f  ,
-                    st     , ct    , 0.0f  , 0.0f  ,
-                     0.0f   , 0.0f  , 1.0f  , d     ,
-                     0.0f   , 0.0f  , 0.0f  , 1.0f  ;*/
-
-    Vector4Glf tv1(0.0f, 0.0f, 0.0f, 1.0f);
-    tv1 = orientationNext_ * tv1;
-
-    std::array<float, 3> pos[] = {
-        refFrameVertexPosData__[0],
-        refFrameVertexPosData__[1],
-        refFrameVertexPosData__[2],
-        refFrameVertexPosData__[3],
-        refFrameVertexPosData__[4],
-        refFrameVertexPosData__[5]
-    };
-
-    std::array<float, 3> col[] = {
-        refFrameVertexColData__[0],
-        refFrameVertexColData__[1],
-        refFrameVertexColData__[2],
-        refFrameVertexColData__[3],
-        refFrameVertexColData__[4],
-        refFrameVertexColData__[5]
-    };
-
-    glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pos), pos, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(col), col, GL_STATIC_DRAW);
-}
+                        0.0f    , 0.0f      , 0.0f      , 1.0f  ;
+}*/
 
 void Joint::applyJoint(const Joint& other) {
-    orientation_ =  other.orientation_ * other.rotZ_ * other.orientationNext_;
+    orientation_ =  other.orientation_ * other.rotZ_ * other.jointMatrix_;
 }
 
 Matrix4Glf Joint::getOrientation(void) const {
     return orientation_ * rotZ_;
 }
 
-void Joint::setJointMatrix(const Matrix4Glf& m) {
-    orientationNext_ = m;
+float Joint::getLength(void) const {
+    return jointMatrix_.block<1, 3>(3, 0).norm();
 }
 
-void Joint::setPosition(const Vector3Glf& position) {
-    position_ = position;
+Vector3Glf Joint::getRight(void) const {
+    return (jointMatrix_ * Vector4Glf(1.0f, 0.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+}
+
+Vector3Glf Joint::getUp(void) const {
+    return (jointMatrix_ * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+}
+
+Vector3Glf Joint::getForward(void) const {
+    return (jointMatrix_ * Vector4Glf(0.0f, 0.0f, 1.0f, 1.0f)).block<1, 3>(0, 0);
+}
+
+Vector3Glf Joint::getEndPoint(void) const {
+    return (orientation_ * jointMatrix_ * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<1, 3>(0, 0);
+}
+
+void Joint::setJointMatrix(const Matrix4Glf& m) {
+    jointMatrix_ = m;
+}
+
+const Matrix4Glf& Joint::getJointMatrix(void) const {
+    return jointMatrix_;
 }
 
 void Joint::setTheta(float theta) {
@@ -172,8 +194,8 @@ void Joint::setTheta(float theta) {
                 0.0f, 0.0f, 0.0f, 1.0f;
 }
 
-void Joint::setRotation(const Matrix3Glf& rotation) {
-    rotation_ = rotation;
+float Joint::getTheta(void) const {
+    return theta_;
 }
 
 void Joint::draw(const Camera& camera) const {
