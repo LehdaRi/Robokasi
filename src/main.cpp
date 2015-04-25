@@ -31,13 +31,14 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     try {
-        Mesh jMesh0, jMesh1, jMesh2, jMesh3, jMesh4, jMesh5;
-        jMesh0.loadFromObj("res/models/puma_link1.obj");
-        jMesh1.loadFromObj("res/models/puma_link2.obj");
-        jMesh2.loadFromObj("res/models/puma_link3.obj");
-        jMesh3.loadFromObj("res/models/puma_link4.obj");
-        jMesh4.loadFromObj("res/models/puma_link5.obj");
-        jMesh5.loadFromObj("res/models/puma_link6.obj");
+        Mesh jMesh0, jMesh1, jMesh2, jMesh3, jMesh4, jMesh5, jMesh6;
+        jMesh0.loadFromObj("res/models/puma_link1_mod.obj");
+        jMesh1.loadFromObj("res/models/puma_link2_mod.obj");
+        jMesh2.loadFromObj("res/models/puma_link3_mod.obj");
+        jMesh3.loadFromObj("res/models/puma_link4_mod.obj");
+        jMesh4.loadFromObj("res/models/puma_link5_mod.obj");
+        jMesh5.loadFromObj("res/models/puma_link6_mod.obj");
+        jMesh6.loadFromObj("res/models/puma_link7_mod.obj");
 
         Shader meshShader("res/shaders/VS_Simple.glsl", "res/shaders/FS_Simple.glsl");
         Shader jointShader("res/shaders/VS_Joint.glsl", "res/shaders/FS_Joint.glsl");
@@ -99,14 +100,16 @@ int main()
         jointMatrices.push_back(jm3);
         jointMatrices.push_back(jm4);
         jointMatrices.push_back(jm5);
+        jointMatrices.push_back(Matrix4Glf::Identity());
 
         Arm arm(jointShader, meshShader, jointMatrices);
-        arm.setJointMesh(0, &jMesh0, Vector3Glf(0.35f, 0.33f, 0.30f));
+        arm.setJointMesh(0, &jMesh0, Vector3Glf(0.35f, 0.23f, 0.12f));
         arm.setJointMesh(1, &jMesh1, Vector3Glf(0.80f, 0.75f, 0.55f));
         arm.setJointMesh(2, &jMesh2, Vector3Glf(0.80f, 0.75f, 0.55f));
         arm.setJointMesh(3, &jMesh3, Vector3Glf(0.80f, 0.75f, 0.55f));
-        arm.setJointMesh(4, &jMesh4, Vector3Glf(0.45f, 0.43f, 0.40f));
-        arm.setJointMesh(5, &jMesh5, Vector3Glf(0.22f, 0.23f, 0.24f));
+        arm.setJointMesh(4, &jMesh4, Vector3Glf(0.26f, 0.23f, 0.19f));
+        arm.setJointMesh(5, &jMesh5, Vector3Glf(0.22f, 0.20f, 0.18f));
+        arm.setJointMesh(6, &jMesh6, Vector3Glf(0.85f, 0.87f, 0.92f));
 
         arm.setJointTheta(0, 0.0f);
 
