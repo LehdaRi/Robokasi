@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-24
+    @date       2015-04-25
 
 **/
 
@@ -13,25 +13,17 @@
 #include "Arm.hpp"
 
 #include <iostream>
+#include <ctime>
 
 
-template<typename _Matrix_Type_>
-_Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon =
-std::numeric_limits<double>::epsilon())
+Arm::Arm(Shader& jointShader, Shader& meshShader, std::vector<Matrix4Glf> matrices) :
+    meshShader_(meshShader),
+    rnd_(time(NULL))
 {
-        Eigen::JacobiSVD< _Matrix_Type_ > svd(a ,Eigen::ComputeThinU |
-    Eigen::ComputeThinV);
-        double tolerance = epsilon * std::max(a.cols(), a.rows())
-    *svd.singularValues().array().abs()(0);
-        return svd.matrixV() *  (svd.singularValues().array().abs() >
-    tolerance).select(svd.singularValues().array().inverse(),
-    0).matrix().asDiagonal() * svd.matrixU().adjoint();
-}
-
-
-Arm::Arm(Shader& shader, std::vector<Matrix4Glf> matrices) {
     for (auto& m : matrices)
-        joints_.emplace_back(shader, m);
+        joints_.emplace_back(jointShader, m);
+
+    meshes_.resize(joints_.size(), std::make_pair(nullptr, Vector3Glf(0.0f, 0.0f, 0.0f)));
 }
 
 void Arm::setJointTheta(unsigned jointId, float theta) {
@@ -39,193 +31,64 @@ void Arm::setJointTheta(unsigned jointId, float theta) {
         return;
 
     joints_[jointId].setTheta(theta);
+    recalculateJoints();
+}
 
-    /*if (jointId < joints_.size())
-        for (auto i=jointId; i<joints_.size()-1; ++i)
-            joints_[i+i].applyJoint(joints_[i]);*/
+void Arm::setJointMesh(unsigned jointId, Mesh* mesh, const Vector3Glf& color) {
+    if (jointId >= meshes_.size())
+        return;
 
-    for (auto i=0u; i<joints_.size()-1; ++i) {
-        joints_[i+1].applyJoint(joints_[i]);
-    }
+    meshes_[jointId] = std::make_pair(mesh, color);
 }
 
 void Arm::draw(const Camera& camera) const {
+    for (auto i=0u; i<joints_.size(); ++i) {
+        if (meshes_[i].first)
+            meshes_[i].first->render(meshShader_, camera, joints_[i], meshes_[i].second);
+    }
+
+    glDisable(GL_DEPTH_TEST);
+
     for (auto& j : joints_)
         j.draw(camera);
+
+    glEnable(GL_DEPTH_TEST);
 }
 
-void Arm::solve(Vector3Glf goal_point, int life_count) {
-    // prev and curr are for use of halving
-    // last is making sure the iteration gets a better solution than the last iteration,
-    // otherwise revert changes
-    float prev_err, curr_err, last_err = 9999;
-    Vector3Glf current_point;
-    int max_iterations = 200;
-    int count = 0;
-    float err_margin = 0.01;
+void Arm::solve(Vector3Glf goal, unsigned nMaxIterations) {
+    float error = (goal - calculateEndEffector()).norm();
+    float newError = error;
 
-    //goal_point -= base;
-    if (goal_point.norm() > get_max_length()) {
-        goal_point = goal_point.normalized() * get_max_length();
-    }
+    std::vector<float> lastThetas;
+    for (auto& joint : joints_)
+        lastThetas.push_back(joint.getTheta());
 
-    current_point = calculate_end_effector();
+    for (auto i=0u; i<nMaxIterations; ++i) {
+        float errScale = error / getMaxLength();
 
-    // save the first err
-    prev_err = (goal_point - current_point).norm();
-    curr_err = prev_err;
-    last_err = curr_err;
+        for (auto& joint : joints_)
+            joint.setTheta(joint.getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale);
 
-    // while the current point is close enough, stop iterating
-    while (curr_err > err_margin) {
-        // calculate the difference between the goal_point and current_point
-        Vector3f dP = goal_point - current_point;
+        recalculateJoints();
 
-        // create the jacovian
-        int segment_size = joints_.size();
-
-        // build the transpose matrix (easier for eigen matrix construction)
-        Eigen::MatrixXf jac_t(3*segment_size, 3);
-        for(int i=0; i<segment_size; ++i) {
-            Eigen::Matrix<float, 1, 3> row_theta = compute_jacovian_segment(i, goal_point, joints_[i].getRight());
-            Eigen::Matrix<float, 1, 3> row_phi = compute_jacovian_segment(i, goal_point, joints_[i].getUp());
-            Eigen::Matrix<float, 1, 3> row_z = compute_jacovian_segment(i, goal_point, joints_[i].getForward());
-
-            int j = 3*i;
-            jac_t(j, 0) = row_theta(0, 0);
-            jac_t(j, 1) = row_theta(0, 1);
-            jac_t(j, 2) = row_theta(0, 2);
-
-            jac_t(j+1, 0) = row_phi(0, 0);
-            jac_t(j+1, 1) = row_phi(0, 1);
-            jac_t(j+1, 2) = row_phi(0, 2);
-
-            jac_t(j+2, 0) = row_z(0, 0);
-            jac_t(j+2, 1) = row_z(0, 1);
-            jac_t(j+2, 2) = row_z(0, 2);
+        newError = (goal - calculateEndEffector()).norm();
+        if (newError > error) {
+            //printf("Reverting changes..\n%f\n", error);
+            for (auto j=0u; j<joints_.size(); ++j)
+                joints_[j].setTheta(lastThetas[j]);
+            recalculateJoints();
+            error = (goal - calculateEndEffector()).norm();
+            //printf("%f\n", error);
         }
-        // compute the final jacovian
-        Eigen::MatrixXf jac(3, 3*segment_size);
-        jac = jac_t.transpose();
+        else {
+            error = newError;
 
-        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> pseudo_ijac;
-        Eigen::MatrixXf pinv_jac(3*segment_size, 3);
-        pinv_jac = pseudoInverse(jac);
-
-        Eigen::Matrix<float, Eigen::Dynamic, 1> changes = pinv_jac * dP;
-
-        std::cout << "changes: " << changes << std::endl;
-
-        auto undoJoints = joints_;
-        auto lastJoints = joints_;
-
-        for(int i=0; i<segment_size; ++i) {
-            // save the current transformation on the segments
-            //joints_[i].save_transformation();
-
-            int j = i*3;
-            // apply the change to the theta angle
-            //joints_[i].apply_angle_change(changes[j], joints_[i].get_right());
-            // apply the change to the phi angle
-            //joints_[i].apply_angle_change(changes[j+1], joints_[i].get_up());
-            // apply the change to the z angle
-            joints_[i].setTheta(joints_[i].getTheta() + changes[j+2]);
-        }
-
-        // compute current_point after making changes
-        current_point = calculate_end_effector();
-
-        //cout << "current_point: " << vectorString(current_point) << endl;
-        //cout << "goal_point: " << vectorString(goal_point) << endl;
-
-        prev_err = curr_err;
-        curr_err = (goal_point - current_point).norm();
-
-        int halving_count = 0;
-
-        std::cout << "curr err: " << curr_err << " || prev err: " << prev_err << " || last err: " << last_err << std::endl;
-        // make sure we aren't iterating past the solution
-        while (curr_err > last_err) {
-            // undo changes
-            //for(int i=0; i<segment_size; i++) {
-                // unapply the change to the saved angle
-                //joints_[i].load_transformation();
-            //}
-
-            joints_ = lastJoints;
-            current_point = calculate_end_effector();
-            changes *= 0.5;
-            // reapply halved changes
-
-            lastJoints = joints_;
-
-            for(int i=0; i<segment_size; ++i) {
-                // save the current transformation on the segments
-                //joints_[i].save_transformation();
-
-                int j = 3*i;
-                // apply the change to the theta angle
-                //joints_[i].apply_angle_change(changes[j], joints_[i].getRight());
-                // apply the change to the phi angle
-                //joints_[i].apply_angle_change(changes[j+1], joints_[i].getUp());
-                // apply the change to the z angle
-                joints_[i].setTheta(joints_[i].getTheta() + changes[j+2]);
-            }
-
-            // compute the end_effector and measure error
-            current_point = calculate_end_effector();
-            prev_err = curr_err;
-            curr_err = (goal_point - current_point).norm();
-
-            std::cout << "|half| curr err: " << curr_err << " || prev err: " << prev_err << std::endl;
-            halving_count++;
-            if (halving_count > 100)
-                break;
-        }
-
-        if (curr_err > last_err) {
-            // undo changes
-            //for(int i=0; i<segment_size; i++) {
-                // unapply the change to the saved angle
-                //segments[i]->load_last_transformation();
-            //}
-
-            joints_ = undoJoints;
-
-            current_point = calculate_end_effector();
-            curr_err = (goal_point - current_point).norm();
-            std::cout << "curr iteration not better than last, reverting" << std::endl;
-            std::cout << "curr err: " << curr_err << " || last err: " << last_err << std::endl;
-            break;
-        }
-        /*for(int i=0; i<segment_size; i++) {
-            // unapply the change to the saved angle
-            joints_[i].save_last_transformation();
-        }*/
-        std::cout << "curr err: " << curr_err << " || last err: " << last_err << std::endl;
-        last_err = curr_err;
-        std::cout << "last_err is now : " << last_err << std::endl;
-
-
-        // make sure we don't infinite loop
-        count++;
-        if (count > max_iterations) {
-            break;
+            for (auto j=0u; j<joints_.size(); ++j)
+                lastThetas[j] = joints_[j].getTheta();
         }
     }
 
-    /*
-    // if we haven't gotten to a nice solution
-    if (curr_err > err_margin) {
-        // kill off infinitely recursive solutions
-        if (life_count <= 0) {
-            return;
-        }
-        // try to solve it again
-        solve(goal_point, life_count-1);
-    } else {
-    */
-    std::cout << "final error: " << curr_err << std::endl;
+    printf("Error: %f\n", error);
 }
 
 Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle) {
@@ -241,16 +104,16 @@ Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf
         transformed_goal -= joints_[i].getEndPoint();
     }
 
-    Vector3Glf my_end_effector = calculate_end_effector(seg_num);
+    Vector3Glf my_end_effector = calculateEndEffector(seg_num);
 
     // transform them both to the origin
     if (seg_num-1 >= 0) {
-        my_end_effector -= calculate_end_effector(seg_num-1);
-        transformed_goal -= calculate_end_effector(seg_num-1);
+        my_end_effector -= calculateEndEffector(seg_num-1);
+        transformed_goal -= calculateEndEffector(seg_num-1);
     }
 
     // original end_effector
-    Vector3Glf original_ee = calculate_end_effector();
+    Vector3Glf original_ee = calculateEndEffector();
 
     // angle input is the one you rotate around
     // remove all the rotations from the previous segments by applying them
@@ -267,7 +130,7 @@ Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf
     // transform the segment by some delta(theta)
     j.setJointMatrix(m * j.getJointMatrix());
     // new end_effector
-    Vector3Glf new_ee = calculate_end_effector();
+    Vector3Glf new_ee = calculateEndEffector();
     // reverse the transformation afterwards
     j.setJointMatrix(mi * j.getJointMatrix());
 
@@ -283,29 +146,22 @@ Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf
 }
 
 // computes end_effector up to certain number of segments
-Vector3Glf Arm::calculate_end_effector(int segment_num /* = -1 */) {
-    int segment_num_to_calc = segment_num;
+Vector3Glf Arm::calculateEndEffector(int jointId /* = -1 */) {
+    if (jointId == -1)
+        jointId = joints_.size()-1;
 
-    // if default value, compute total end effector
-    if (segment_num == -1) {
-        segment_num_to_calc = joints_.size() - 1;
-    }
-    // else don't mess with it
+    return joints_[jointId].getEndPoint();
+}
 
-    // start with base
-    Vector3Glf ret(0.0f, 0.0f, 0.0f);
-    for(int i=0; i<=segment_num_to_calc; i++) {
-        // add each segments end point vector to the base
-        ret += joints_[i].getEndPoint();
-    }
-    // return calculated end effector
+float Arm::getMaxLength(void) {
+    float ret = 0;
+    for (unsigned int i=0; i<joints_.size(); i++)
+        ret += joints_[i].getLength();
     return ret;
 }
 
-float Arm::get_max_length(void) {
-    float ret = 0;
-    for(unsigned int i=0; i<joints_.size(); i++) {
-        ret += joints_[i].getLength();
+void Arm::recalculateJoints(void) {
+    for (auto i=0u; i<joints_.size()-1; ++i) {
+        joints_[i+1].applyJoint(joints_[i]);
     }
-    return ret;
 }

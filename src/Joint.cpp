@@ -157,19 +157,19 @@ Matrix4Glf Joint::getOrientation(void) const {
 }
 
 float Joint::getLength(void) const {
-    return jointMatrix_.block<1, 3>(3, 0).norm();
+    return jointMatrix_.block<3, 1>(0, 3).norm();
 }
 
 Vector3Glf Joint::getRight(void) const {
-    return (getOrientation() * Vector4Glf(1.0f, 0.0f, 0.0f, 1.0f)).block<3, 1>(0, 0);
+    return (getOrientation() * Vector4Glf(1.0f, 0.0f, 0.0f, 0.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getUp(void) const {
-    return (getOrientation() * Vector4Glf(0.0f, 1.0f, 0.0f, 1.0f)).block<3, 1>(0, 0);
+    return (getOrientation() * Vector4Glf(0.0f, 1.0f, 0.0f, 0.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getForward(void) const {
-    return (getOrientation() * Vector4Glf(0.0f, 0.0f, 1.0f, 1.0f)).block<3, 1>(0, 0);
+    return (getOrientation() * Vector4Glf(0.0f, 0.0f, 1.0f, 0.0f)).block<3, 1>(0, 0);
 }
 
 Vector3Glf Joint::getEndPoint(void) const {

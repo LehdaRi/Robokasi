@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-24
+    @date       2015-04-25
 
 **/
 
@@ -15,24 +15,36 @@
 
 
 #include "Joint.hpp"
+#include "Mesh.hpp"
 
 #include <vector>
+#include <random>
 
 
 class Arm {
 public:
-    Arm(Shader& shader, std::vector<Matrix4Glf> matrices);
+    Arm(Shader& jointShader, Shader& meshShader, std::vector<Matrix4Glf> matrices);
 
     void setJointTheta(unsigned jointId, float theta);
+    void setJointMesh(unsigned jointId, Mesh* mesh,
+                      const Vector3Glf& color = Vector3Glf(1.0f, 1.0f, 1.0f));
     void draw(const Camera& camera) const;
 
-    void solve(Vector3Glf goal_point, int life_count);
+    void solve(Vector3Glf goal, unsigned nMaxIterations);
     Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
-    Vector3Glf calculate_end_effector(int segment_num = -1);
-    float get_max_length(void);
+
+    Vector3Glf calculateEndEffector(int jointId = -1);
+    float getMaxLength(void);
 
 private:
     std::vector<Joint> joints_;
+    std::vector<std::pair<Mesh*, Vector3Glf>> meshes_;
+
+    Shader& meshShader_;
+
+    std::default_random_engine rnd_;
+
+    void recalculateJoints(void);
 };
 
 
