@@ -1,7 +1,7 @@
 /**
 
     Automaatio- ja Systeemitekniikan killan robokäsiprojekti
-    Trajectory.hpp
+    Serial.hpp
 
     @version    0.1
     @author     Veikka Kähkönen
