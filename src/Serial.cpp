@@ -23,8 +23,11 @@ Serial::Serial() :
 }
 
 void Serial::open(std::string port) {
-	this->input_.open(port);
-	this->output_.open(port);
+	this->input_.open(port, std::ifstream::in);
+	this->output_.open(port, std::ofstream::out | std::ofstream::app);
+	std::cout << "opened" << std::endl;
+	if(!this->output_.is_open())
+		perror("Serial port not opened");
 }
 
 void Serial::close() {
@@ -41,8 +44,10 @@ void Serial::pushAngles(const std::vector<float>& angles) {
 }
 
 bool Serial::getStatus() {
-	/*std::string temp;
+	while(!this->input_.gcount()) {
+	}
+	std::string temp;
 	this->input_ >> temp;
-	std::cout << temp;*/
+	std::cout << temp;
 	return false;
 }
