@@ -10,6 +10,9 @@
 **/
 
 
+#ifndef ROBOKASI_ROBOSERIAL_HPP
+#define ROBOKASI_ROBOSERIAL_HPP
+
 #include "Trajectory.hpp"
 #include "LinearAlgebra.hpp"
 #include <fstream>
@@ -67,3 +70,5 @@ void Trajectory::loadFromFile(const std::string& fileName, const float dt) {
 std::vector<Vector3Glf>& Trajectory::getTrajectory() {
 	return this->trajectory_;
 }
+
+#endif

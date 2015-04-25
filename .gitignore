@@ -2,6 +2,7 @@ bin/
 obj/
 build/
 temp_trajectory_test*
+*!temptest!*
 *.cbp
 *.layout
 *.depend
