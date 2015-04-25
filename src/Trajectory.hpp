@@ -15,14 +15,15 @@
 
 #include "LinearAlgebra.hpp"
 #include <vector>
+#include <array>
 
 class Trajectory {
 public:
 	void loadFromFile(const std::string& fileName);
-	std::vector<std::pair<Vector3Glf, Vector3Glf>>& getTrajectory();
+	std::vector<std::array<Vector3Glf,3>>& getTrajectory();
 
 private:
-	std::vector<std::pair<Vector3Glf, Vector3Glf>> trajectory_;
+	std::vector<std::array<Vector3Glf,3>> trajectory_;
 };
 
 #endif
