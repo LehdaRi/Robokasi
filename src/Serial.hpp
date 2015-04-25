@@ -19,7 +19,6 @@ public:
 	void open(std::string port);
 	void close();
 	void pushAngles(const std::vector<float>& angles);
-	bool getStatus();
 
 private:
 	std::ifstream input_;

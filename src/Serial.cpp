@@ -24,7 +24,7 @@ Serial::Serial() :
 
 void Serial::open(std::string port) {
 	std::cout << "lel" << std::endl;
-	popen("stty -f /dev/tty.usbmodem1411 cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke -noflsh -ixon -crtscts\n", "r");
+	popen("stty -F /dev/ttyACM0 cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke -noflsh -ixon -crtscts\n", "r");
 	std::cout << "lel" << std::endl;
 	this->input_.open(port, std::ifstream::in);
 	if(!this->input_.is_open())
@@ -45,13 +45,6 @@ void Serial::pushAngles(const std::vector<float>& angles) {
 	}
 	data.erase(data.size()-1);
 	this->output_ << data << std::endl;
+    this->output_.flush();
 }
 
-bool Serial::getStatus() {
-	while(!this->input_.gcount()) {
-	}
-	std::string temp;
-	this->input_ >> temp;
-	std::cout << temp;
-	return false;
-}
