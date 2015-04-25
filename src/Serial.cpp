@@ -23,11 +23,15 @@ Serial::Serial() :
 }
 
 void Serial::open(std::string port) {
+	std::cout << "lel" << std::endl;
+	popen("stty -f /dev/tty.usbmodem1411 cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke -noflsh -ixon -crtscts\n", "r");
+	std::cout << "lel" << std::endl;
 	this->input_.open(port, std::ifstream::in);
+	if(!this->input_.is_open())
+		perror("Serial port input not opened");
 	this->output_.open(port, std::ofstream::out | std::ofstream::app);
-	std::cout << "opened" << std::endl;
 	if(!this->output_.is_open())
-		perror("Serial port not opened");
+		perror("Serial port output not opened");
 }
 
 void Serial::close() {
