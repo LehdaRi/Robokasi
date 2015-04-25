@@ -18,6 +18,7 @@
 #include "Mesh.hpp"
 
 #include <vector>
+#include <array>
 #include <random>
 
 
@@ -25,19 +26,23 @@ class Arm {
 public:
     Arm(Shader& jointShader, Shader& meshShader, std::vector<Matrix4Glf> matrices);
 
-    void setJointTheta(unsigned jointId, float theta);
     void setJointMesh(unsigned jointId, Mesh* mesh,
                       const Vector3Glf& color = Vector3Glf(1.0f, 1.0f, 1.0f));
+    void setJointConstraints(unsigned jointId, float lowerLimit, float upperLimit);
+    void setJointTheta(unsigned jointId, float theta, bool recalculate = true);
     void draw(const Camera& camera) const;
 
-    void solve(Vector3Glf goal, unsigned nMaxIterations);
+    void solve(const Vector3Glf& goal,
+               const Vector3Glf& toolOrientation,
+               unsigned nMaxIterations);
     Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
 
-    Vector3Glf calculateEndEffector(int jointId = -1);
+    Vector3Glf calculateEndEffector(int jointId = -1) const;
     float getMaxLength(void);
 
 private:
     std::vector<Joint> joints_;
+    std::vector<std::array<float, 2>> constraints_;
     std::vector<std::pair<Mesh*, Vector3Glf>> meshes_;
 
     Shader& meshShader_;
@@ -45,6 +50,8 @@ private:
     std::default_random_engine rnd_;
 
     void recalculateJoints(void);
+    float getPositionError(const Vector3Glf& goal) const;
+    float getOrientationError(const Vector3Glf& goalOrientation) const;
 };
 
 

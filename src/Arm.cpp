@@ -23,15 +23,8 @@ Arm::Arm(Shader& jointShader, Shader& meshShader, std::vector<Matrix4Glf> matric
     for (auto& m : matrices)
         joints_.emplace_back(jointShader, m);
 
+    constraints_.resize(joints_.size(), {-2*PI, 2*PI});
     meshes_.resize(joints_.size(), std::make_pair(nullptr, Vector3Glf(0.0f, 0.0f, 0.0f)));
-}
-
-void Arm::setJointTheta(unsigned jointId, float theta) {
-    if (jointId >= joints_.size())
-        return;
-
-    joints_[jointId].setTheta(theta);
-    recalculateJoints();
 }
 
 void Arm::setJointMesh(unsigned jointId, Mesh* mesh, const Vector3Glf& color) {
@@ -40,6 +33,27 @@ void Arm::setJointMesh(unsigned jointId, Mesh* mesh, const Vector3Glf& color) {
 
     meshes_[jointId] = std::make_pair(mesh, color);
 }
+
+void Arm::setJointConstraints(unsigned jointId, float lowerLimit, float upperLimit) {
+    if (jointId >= constraints_.size())
+        return;
+
+    constraints_[jointId] = { lowerLimit, upperLimit };
+    setJointTheta(jointId, (lowerLimit + upperLimit)*0.5f);
+}
+
+void Arm::setJointTheta(unsigned jointId, float theta, bool recalculate) {
+    if (jointId >= joints_.size())
+        return;
+
+    if (theta >= constraints_[jointId][0] && theta <= constraints_[jointId][1]) {
+        joints_[jointId].setTheta(theta);
+        if (recalculate)
+            recalculateJoints();
+    }
+}
+
+
 
 void Arm::draw(const Camera& camera) const {
     for (auto i=0u; i<joints_.size(); ++i) {
@@ -55,40 +69,67 @@ void Arm::draw(const Camera& camera) const {
     glEnable(GL_DEPTH_TEST);
 }
 
-void Arm::solve(Vector3Glf goal, unsigned nMaxIterations) {
-    float error = (goal - calculateEndEffector()).norm();
-    float newError = error;
+void Arm::solve(const Vector3Glf& goal,
+                const Vector3Glf& toolOrientation,
+                unsigned nMaxIterations) {
+    float posError = getPositionError(goal);
+    float newPosError = posError;
+    float oriError = getOrientationError(toolOrientation);
+    float newOriError = oriError;
 
     std::vector<float> lastThetas;
     for (auto& joint : joints_)
         lastThetas.push_back(joint.getTheta());
 
     for (auto i=0u; i<nMaxIterations; ++i) {
-        float errScale = error / getMaxLength();
+        float errScale = posError / getMaxLength();
 
-        for (auto& joint : joints_)
-            joint.setTheta(joint.getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale);
+        //  position
+        for (auto i=0u; i<joints_.size(); ++i)
+            setJointTheta(i, joints_[i].getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale, false);
 
         recalculateJoints();
 
-        newError = (goal - calculateEndEffector()).norm();
-        if (newError > error) {
-            //printf("Reverting changes..\n%f\n", error);
+        newPosError = getPositionError(goal);
+
+        if (newPosError > posError) {
             for (auto j=0u; j<joints_.size(); ++j)
                 joints_[j].setTheta(lastThetas[j]);
+
             recalculateJoints();
-            error = (goal - calculateEndEffector()).norm();
-            //printf("%f\n", error);
+            posError = getPositionError(goal);
         }
         else {
-            error = newError;
+            posError = newPosError;
+            for (auto j=0u; j<joints_.size(); ++j)
+                lastThetas[j] = joints_[j].getTheta();
+        }
 
+        //  orientation
+        for (auto i=0u; i<joints_.size(); ++i)
+            setJointTheta(i, joints_[i].getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale, false);
+
+        recalculateJoints();
+
+        newOriError = getOrientationError(toolOrientation);
+
+        if (newOriError > oriError) {
+            for (auto j=0u; j<joints_.size(); ++j)
+                joints_[j].setTheta(lastThetas[j]);
+
+            recalculateJoints();
+            oriError = getOrientationError(toolOrientation);
+        }
+        else {
+            oriError = newOriError;
             for (auto j=0u; j<joints_.size(); ++j)
                 lastThetas[j] = joints_[j].getTheta();
         }
     }
 
-    printf("Error: %f\n", error);
+    printf("joint 0 theta: %f\n", joints_[0].getTheta());
+    printf("posError: %f\n", posError);
+    printf("oriError: %f\n", oriError);
 }
 
 Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle) {
@@ -146,7 +187,7 @@ Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf
 }
 
 // computes end_effector up to certain number of segments
-Vector3Glf Arm::calculateEndEffector(int jointId /* = -1 */) {
+Vector3Glf Arm::calculateEndEffector(int jointId /* = -1 */) const {
     if (jointId == -1)
         jointId = joints_.size()-1;
 
@@ -164,4 +205,14 @@ void Arm::recalculateJoints(void) {
     for (auto i=0u; i<joints_.size()-1; ++i) {
         joints_[i+1].applyJoint(joints_[i]);
     }
+}
+
+float Arm::getPositionError(const Vector3Glf& goal) const {
+    return (goal - calculateEndEffector()).norm();
+}
+
+float Arm::getOrientationError(const Vector3Glf& goalOrientation) const {
+    auto& lastJoint = joints_.back();
+    //std::cout << lastJoint.getForward().normalized().transpose() << std::endl;
+    return (1.0f - goalOrientation.normalized().dot(lastJoint.getForward().normalized())) * 0.5f;
 }

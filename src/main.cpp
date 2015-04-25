@@ -110,10 +110,18 @@ int main()
         arm.setJointMesh(4, &jMesh4, Vector3Glf(0.26f, 0.23f, 0.19f));
         arm.setJointMesh(5, &jMesh5, Vector3Glf(0.22f, 0.20f, 0.18f));
         arm.setJointMesh(6, &jMesh6, Vector3Glf(0.85f, 0.87f, 0.92f));
+        arm.setJointConstraints(0, 0.0f, 0.0f);
+        arm.setJointConstraints(1, PI*0.25f,    PI*1.75f);
+        arm.setJointConstraints(2, PI*0.75f,    PI*1.25f);
+        arm.setJointConstraints(3, -PI*1.75f,   PI*1.75f);
+        arm.setJointConstraints(4, -PI*2.0f,    PI*2.0f);
+        arm.setJointConstraints(5, PI*0.4f,     PI*1.6f);
+        arm.setJointConstraints(6, -PI*2.0f,    PI*2.0f);
 
         arm.setJointTheta(0, 0.0f);
 
         Vector3Glf goal(20.0f, 20.0f, 40.0f);
+        Vector3Glf goalOrientation(0.0f, 0.0f, 1.0f);
 
         float t = 0.0f;
 
@@ -156,6 +164,7 @@ int main()
                     case sf::Keyboard::Q:
                         goal[2] -= 1.0f;
                     break;
+                    default: break;
                     }
                 }
             }
@@ -170,6 +179,7 @@ int main()
             jMesh4.render(meshShader, camera, j4, Vector3Glf(0.45f, 0.43f, 0.40f));
             jMesh5.render(meshShader, camera, j5, Vector3Glf(0.22f, 0.23f, 0.24f));
 */
+            arm.solve(goal, goalOrientation, 1000);
             arm.draw(camera);
 /*          j0.draw(camera);
             j1.draw(camera);
@@ -179,7 +189,6 @@ int main()
             j5.draw(camera);
             j6.draw(camera);*/
 
-            arm.solve(goal, 1000);
             /*
             arm.setJointTheta(0, 0.0f);
             arm.setJointTheta(1, 0.3f * t);
