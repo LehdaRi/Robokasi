@@ -10,14 +10,19 @@
 **/
 
 
+#ifndef ROBOKASI_ROBOSERIAL_HPP
+#define ROBOKASI_ROBOSERIAL_HPP
+
 #include "LinearAlgebra.hpp"
 #include <vector>
 
 class Trajectory {
 public:
-	void loadFromFile(const std::string& fileName, const float dt);
-	std::vector<Vector3Glf>& getTrajectory();
+	void loadFromFile(const std::string& fileName);
+	std::vector<std::pair<Vector3Glf, Vector3Glf>>& getTrajectory();
 
 private:
-	std::vector<Vector3Glf> trajectory_;
+	std::vector<std::pair<Vector3Glf, Vector3Glf>> trajectory_;
 };
+
+#endif
