@@ -42,6 +42,7 @@ void Serial::pushAngles(const std::vector<float>& angles) {
 	std::string data;
 	for(auto theta : angles) {
 		data.append(std::to_string(theta));
+		data.append(";");
 	}
 	data.erase(data.size()-1);
 	this->output_ << data << std::endl;
