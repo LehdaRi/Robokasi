@@ -24,7 +24,7 @@ Serial::Serial() :
 
 void Serial::open(std::string port) {
 	std::string command;
-	command = "stty -F " + port + "cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke -noflsh -ixon -crtscts\n";
+	command = "stty -F " + port + " cs8 9600 ignbrk -brkint -icrnl -imaxbel -opost -onlcr -isig -icanon -iexten -echo -echoe -echok -echoctl -echoke -noflsh -ixon -crtscts\n";
 	popen(command.c_str(), "r");
 	this->input_.open(port, std::ifstream::in);
 	if(!this->input_.is_open())
