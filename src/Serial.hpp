@@ -10,8 +10,13 @@
 **/
 
 
+#ifndef ROBOKASI_SERIAL_HPP
+#define ROBOKASI_SERIAL_HPP
+
+
 #include <vector>
 #include <fstream>
+
 
 class Serial {
 public:
@@ -24,3 +29,5 @@ private:
 	std::ifstream input_;
 	std::ofstream output_;
 };
+
+#endif
