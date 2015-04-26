@@ -10,7 +10,7 @@
 **/
 
 
-#version 330 core
+#version 130 core
 
 varying vec3 col;
 

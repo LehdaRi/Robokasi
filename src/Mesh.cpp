@@ -169,7 +169,7 @@ void Mesh::loadFromObj(const std::string& fileName) {
     glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(std::array<float, 4>), &positions[0], GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-
+/*
     if (usingTexCoords) {
         glGenBuffers(1, &texCoordBufferId_);
         glBindBuffer(GL_ARRAY_BUFFER, texCoordBufferId_);
@@ -177,13 +177,13 @@ void Mesh::loadFromObj(const std::string& fileName) {
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
     }
-
+*/
     if (usingNormals) {
         glGenBuffers(1, &normalBufferId_);
         glBindBuffer(GL_ARRAY_BUFFER, normalBufferId_);
         glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(std::array<float, 3>), &normals[0], GL_STATIC_DRAW);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
     }
 
     if (usingIndexing) {

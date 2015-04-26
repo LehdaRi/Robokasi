@@ -102,6 +102,13 @@ GLuint Shader::getId(void) const {
 }
 
 void Shader::useShader(const Matrix4Glf& mvp, const Vector3Glf& color) const {
+    glBindAttribLocation(programId_, 0, "position");
+    glBindAttribLocation(programId_, 1, "normal");
+
+    /*glBindFragDataLocation(programId_, 0, "pos");
+    glBindFragDataLocation(programId_, 1, "norm");
+    glBindFragDataLocation(programId_, 2, "col");*/
+
     glUseProgram(programId_);
     glUniformMatrix4fv(uniformPosition_MVP_, 1, GL_FALSE, mvp.data());
     glUniform3fv(uniformPosition_Color_, 1, color.data());
