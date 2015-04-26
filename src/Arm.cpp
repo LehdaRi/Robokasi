@@ -53,8 +53,6 @@ void Arm::setJointTheta(unsigned jointId, float theta, bool recalculate) {
     }
 }
 
-
-
 void Arm::draw(const Camera& camera) const {
     for (auto i=0u; i<joints_.size(); ++i) {
         if (meshes_[i].first)
@@ -81,12 +79,27 @@ void Arm::solve(const Vector3Glf& goal,
     for (auto& joint : joints_)
         lastThetas.push_back(joint.getTheta());
 
+    float b = 0.00005f;
     for (auto i=0u; i<nMaxIterations; ++i) {
         float errScale = posError / getMaxLength();
+        float a = ((i+1)/(float)nMaxIterations);
 
+        b *= 1.01f;
         //  position
-        for (auto i=0u; i<joints_.size(); ++i)
-            setJointTheta(i, joints_[i].getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale, false);
+        for (auto j=0u; j<joints_.size(); ++j) {
+            float t = joints_[j].getTheta();
+            float r = rnd_()%10000 * 0.0001f;
+
+            float minTheta = (constraints_[j][0] - t) * errScale;// * 10.0f;
+            float maxTheta = (constraints_[j][1] - t) * errScale;// * 10.0f;
+            float newTheta = t + minTheta + r*(maxTheta - minTheta);
+
+            //printf("b: %f theta: %f minTheta: %f maxTheta: %f newTheta: %f\n", b, t, minTheta, maxTheta, newTheta);
+
+            setJointTheta(j, newTheta, false);
+        }
+        //for (auto j=0u; j<joints_.size(); ++j)
+        //    setJointTheta(j, joints_[j].getTheta() - 0.5f*100.0f*errScale + (rnd_()%10000 * 0.0001f)*100.0f*errScale, false);
 
         recalculateJoints();
 
@@ -106,7 +119,7 @@ void Arm::solve(const Vector3Glf& goal,
         }
 
         //  orientation
-        for (auto i=0u; i<joints_.size(); ++i)
+        /*for (auto i=0u; i<joints_.size(); ++i)
             setJointTheta(i, joints_[i].getTheta() - 0.5f*errScale + (rnd_()%10000 * 0.0001f)*errScale, false);
 
         recalculateJoints();
@@ -124,14 +137,14 @@ void Arm::solve(const Vector3Glf& goal,
             oriError = newOriError;
             for (auto j=0u; j<joints_.size(); ++j)
                 lastThetas[j] = joints_[j].getTheta();
-        }
+        }*/
     }
 
     printf("joint 0 theta: %f\n", joints_[0].getTheta());
     printf("posError: %f\n", posError);
     printf("oriError: %f\n", oriError);
 }
-
+/*
 Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle) {
     Joint& j = joints_.at(seg_num);
     // mini is the amount of angle you go in the direction for numerical calculation
@@ -184,7 +197,7 @@ Eigen::Matrix<float, 1, 3> Arm::compute_jacovian_segment(int seg_num, Vector3Glf
     Eigen::Matrix<float, 1, 3> ret;
     ret << diff[0]/mini, diff[1]/mini, diff[2]/mini;
     return ret;
-}
+}*/
 
 // computes end_effector up to certain number of segments
 Vector3Glf Arm::calculateEndEffector(int jointId /* = -1 */) const {

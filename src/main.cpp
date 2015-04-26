@@ -118,8 +118,6 @@ int main()
         arm.setJointConstraints(5, PI*0.4f,     PI*1.6f);
         arm.setJointConstraints(6, -PI*2.0f,    PI*2.0f);
 
-        arm.setJointTheta(0, 0.0f);
-
         Vector3Glf goal(20.0f, 20.0f, 40.0f);
         Vector3Glf goalOrientation(0.0f, 0.0f, 1.0f);
 

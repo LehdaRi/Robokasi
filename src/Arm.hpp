@@ -35,7 +35,7 @@ public:
     void solve(const Vector3Glf& goal,
                const Vector3Glf& toolOrientation,
                unsigned nMaxIterations);
-    Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
+    //Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
 
     Vector3Glf calculateEndEffector(int jointId = -1) const;
     float getMaxLength(void);
