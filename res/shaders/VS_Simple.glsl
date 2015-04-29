@@ -10,7 +10,7 @@
 **/
 
 
-#version 130 core
+#version 130
 
 //layout(location = 0) in vec3 position;
 //layout(location = 2) in vec3 normal;

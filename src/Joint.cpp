@@ -18,13 +18,13 @@
 
 ///  Static members
 
-std::array<float, 3> Joint::refFrameVertexPosData__[] = {
-    {0.0f, 0.0f, 0.0f},
-    {8.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 8.0f, 0.0f},
-    {0.0f, 0.0f, 0.0f},
-    {0.0f, 0.0f, 8.0f}
+std::array<float, 4> Joint::refFrameVertexPosData__[] = {
+    {0.0f, 0.0f, 0.0f, 1.0},
+    {8.0f, 0.0f, 0.0f, 1.0},
+    {0.0f, 0.0f, 0.0f, 1.0},
+    {0.0f, 8.0f, 0.0f, 1.0},
+    {0.0f, 0.0f, 0.0f, 1.0},
+    {0.0f, 0.0f, 8.0f, 1.0}
 };
 
 std::array<float, 3> Joint::refFrameVertexColData__[] = {
@@ -45,16 +45,26 @@ Joint::Joint(Shader& shader, const Matrix4Glf& jointMatrix) :
     theta_(0.0f),
     rotZ_(Matrix4Glf::Identity()),
     shader_(shader),
+    vertexArrayObjectId_(0),
     posBuffer_(0),
     colBuffer_(0)
 {
+    glGenVertexArrays(1, &vertexArrayObjectId_);
+    glBindVertexArray(vertexArrayObjectId_);
+
     glGenBuffers(1, &posBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexPosData__), refFrameVertexPosData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
     glGenBuffers(1, &colBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+    glBindVertexArray(0);
 }
 
 Joint::Joint(const Joint& other) :
@@ -66,13 +76,22 @@ Joint::Joint(const Joint& other) :
     posBuffer_(0),
     colBuffer_(0)
 {
+    glGenVertexArrays(1, &vertexArrayObjectId_);
+    glBindVertexArray(vertexArrayObjectId_);
+
     glGenBuffers(1, &posBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexPosData__), refFrameVertexPosData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
     glGenBuffers(1, &colBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+
+    glBindVertexArray(0);
 }
 
 Joint::Joint(Joint&& other) :
@@ -84,14 +103,24 @@ Joint::Joint(Joint&& other) :
     posBuffer_(0),
     colBuffer_(0)
 {
+    glGenVertexArrays(1, &vertexArrayObjectId_);
+    glBindVertexArray(vertexArrayObjectId_);
+
     glGenBuffers(1, &posBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexPosData__), refFrameVertexPosData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
     glGenBuffers(1, &colBuffer_);
     glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
     glBufferData(GL_ARRAY_BUFFER, sizeof(refFrameVertexColData__), refFrameVertexColData__, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
 
+    glBindVertexArray(0);
+
+    glDeleteVertexArrays(1, &other.vertexArrayObjectId_);
     glDeleteBuffers(1, &other.posBuffer_);
     glDeleteBuffers(1, &other.colBuffer_);
 }
@@ -111,6 +140,7 @@ Joint& Joint::operator=(Joint&& other) {
     theta_ = other.theta_;
     rotZ_ = other.rotZ_;
 
+    glDeleteVertexArrays(1, &other.vertexArrayObjectId_);
     glDeleteBuffers(1, &other.posBuffer_);
     glDeleteBuffers(1, &other.colBuffer_);
 
@@ -202,15 +232,9 @@ float Joint::getTheta(void) const {
 void Joint::draw(const Camera& camera) const {
     shader_.useShader(camera.getVP() * getOrientation());
 
-    glBindBuffer(GL_ARRAY_BUFFER, posBuffer_);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, colBuffer_);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (GLvoid*)0);
+    glBindVertexArray(vertexArrayObjectId_);
 
     glDrawArrays(GL_LINES, 0, 6);
 
-    glDisableVertexAttribArray(0);
+    glBindVertexArray(0);
 }

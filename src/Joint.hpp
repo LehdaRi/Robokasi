@@ -54,7 +54,7 @@ public:
     void draw(const Camera& camera) const;
 
 private:
-    static std::array<float, 3> refFrameVertexPosData__[6];
+    static std::array<float, 4> refFrameVertexPosData__[6];
     static std::array<float, 3> refFrameVertexColData__[6];
 
     Matrix4Glf orientation_;
@@ -63,6 +63,7 @@ private:
     Matrix4Glf rotZ_;
 
     Shader& shader_;
+    GLuint vertexArrayObjectId_;
     GLuint posBuffer_;
     GLuint colBuffer_;
 };

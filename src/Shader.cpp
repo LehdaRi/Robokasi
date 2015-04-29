@@ -81,6 +81,9 @@ Shader::Shader(const std::string& vsFileName, const std::string& fsFileName) {
 
     GLint linkStatus;
 
+    glBindAttribLocation(programId_, 0, "position");
+    glBindAttribLocation(programId_, 1, "normal");
+
     glLinkProgram(programId_);
 
     glGetProgramiv(programId_, GL_LINK_STATUS, &linkStatus);
@@ -102,8 +105,7 @@ GLuint Shader::getId(void) const {
 }
 
 void Shader::useShader(const Matrix4Glf& mvp, const Vector3Glf& color) const {
-    glBindAttribLocation(programId_, 0, "position");
-    glBindAttribLocation(programId_, 1, "normal");
+
 
     /*glBindFragDataLocation(programId_, 0, "pos");
     glBindFragDataLocation(programId_, 1, "norm");

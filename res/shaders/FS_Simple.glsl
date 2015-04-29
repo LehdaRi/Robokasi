@@ -10,11 +10,11 @@
 **/
 
 
-#version 130 core
+#version 130
 
-varying vec4 pos;
-varying vec4 norm;
-varying vec3 col;
+in vec4 pos;
+in vec4 norm;
+in vec3 col;
 
 out vec3 color;
 

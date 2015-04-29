@@ -10,9 +10,9 @@
 **/
 
 
-#version 130 core
+#version 130
 
-varying vec3 col;
+in vec3 col;
 
 out vec3 color;
 
