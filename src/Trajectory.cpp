@@ -4,19 +4,17 @@
     Trajectory.cpp
 
     @version    0.1
-    @author     Veikka Kähkönen
-    @date       2015-04-24
+    @author     Veikka Kähkönen / Miika Lehtimäki
+    @date       2015-04-29
 
 **/
 
 
 #include "Trajectory.hpp"
-#include "LinearAlgebra.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <vector>
 
 
 namespace {
@@ -37,18 +35,12 @@ namespace {
 }
 
 
+void Trajectory::addPoint(const TrajectoryPoint& point) {
+    trajectory_.push_back(point);
+}
+
+
 void Trajectory::loadFromFile(const std::string& fileName) {
-	/*
-	Load a trajectory from file.
-
-	File format:
-	MV x1 y1 z1 x2 y2 z2 x3 y3 z3
-	Where:
-	(x1, y1, z1): End effector position vector
-	(x2, y2, z2): End effector forward direction vector
-	(x3, y3, z3): End effector upward position vector
-	*/
-
 	// Open file
 	std::ifstream f (fileName);
 	std::string line;
@@ -59,26 +51,21 @@ void Trajectory::loadFromFile(const std::string& fileName) {
 		// Tokenize
 		auto items = split(line.c_str(), ' ');
 		// Move command
-		if(items.size() == 10 && items[0] == "MV") {
-			// End effector position
-			auto x1 = std::stof(items[1]);
-			auto y1 = std::stof(items[2]);
-			auto z1 = std::stof(items[3]);
-			Vector3Glf pos(x1, y1, z1);
-			// End effector forward direction
-			auto x2 = std::stof(items[4]);
-			auto y2 = std::stof(items[5]);
-			auto z2 = std::stof(items[6]);
-			Vector3Glf dirF(x2, y2, z2);
-			// End effector upward direction
-			auto x3 = std::stof(items[7]);
-			auto y3 = std::stof(items[8]);
-			auto z3 = std::stof(items[9]);
-			Vector3Glf dirU(x3, y3, z3);
-			// Insert the vectors into an array
-			std::array<Vector3Glf, 3> vects{{pos, dirF, dirU}};
-			// Insert the array into a vector
-			this->trajectory_.emplace_back(vects);
+		if(items.size() == 10) {
+			TrajectoryPoint newPoint = {
+                { std::stof(items[0]),
+                  std::stof(items[1]),
+                  std::stof(items[2]),
+                  std::stof(items[3]),
+                  std::stof(items[4]),
+                  std::stof(items[5]) },
+                { std::stoi(items[6]),
+                  std::stoi(items[7]),
+                  std::stoi(items[8]),
+                  std::stoi(items[9]) }
+			};
+
+			trajectory_.push_back(newPoint);
 		} else {
 			std::string error = "Invalid trajectory file line: " + line;
 			throw(error);
@@ -86,7 +73,31 @@ void Trajectory::loadFromFile(const std::string& fileName) {
 	}
 }
 
+void Trajectory::saveToFile(const std::string& fileName) {
+	// Open file
+	std::ofstream f (fileName);
+	std::string line;
+	if (!f.is_open())
+    	perror("Error while opening file");
 
-std::vector<std::array<Vector3Glf,3>>& Trajectory::getTrajectory() {
-	return this->trajectory_;
+ 	for (auto& point : trajectory_) {
+ 	    for (auto i=0; i<6; ++i)
+            f << point.angles[i] << " ";
+        f << point.params[0] << " "
+          << point.params[1] << " "
+          << point.params[2] << " "
+          << point.params[3] << std::endl;
+	}
+}
+
+size_t Trajectory::size(void) const {
+    return trajectory_.size();
+}
+
+const TrajectoryVector& Trajectory::getVector(void) const {
+	return trajectory_;
+}
+
+TrajectoryPoint& Trajectory::operator[](int pointId) {
+    return trajectory_.at(pointId);
 }

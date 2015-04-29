@@ -5,7 +5,7 @@
 
     @version    0.1
     @author     Miika 'LehdaRi' Lehtimäki
-    @date       2015-04-24
+    @date       2015-04-29
 
 **/
 
@@ -13,10 +13,28 @@
 #include "Mesh.hpp"
 #include "Shader.hpp"
 #include "Arm.hpp"
+#include "Serial.hpp"
 
 #include <iostream>
 #include <SFML/Window.hpp>
 #include <GL/glew.h>
+
+
+void sendPoint(Serial& serial, Arm& arm, int safeMode, int brake, int gripper) {
+    TrajectoryPoint point = {
+        { arm.getJointTheta(1),
+          arm.getJointTheta(2),
+          arm.getJointTheta(3),
+          arm.getJointTheta(4),
+          arm.getJointTheta(5),
+          arm.getJointTheta(6) },
+        { safeMode,
+          brake,
+          gripper }
+    };
+
+    serial.moveToPoint(point);
+}
 
 
 int main()
@@ -114,14 +132,28 @@ int main()
         arm.setJointConstraints(1, PI*0.25f,    PI*1.75f);
         arm.setJointConstraints(2, PI*0.75f,    PI*1.25f);
         arm.setJointConstraints(3, -PI*0.75f,   PI*0.75f);
-        arm.setJointConstraints(4, -PI*2.0f,    PI*2.0f);
+        arm.setJointConstraints(4, -PI*1.0f,    PI*1.0f);
         arm.setJointConstraints(5, PI*0.4f,     PI*1.6f);
         arm.setJointConstraints(6, -PI*2.0f,    PI*2.0f);
 
         std::array<float, 6> jointSpeed = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
-        Vector3Glf goal(20.0f, 20.0f, 40.0f);
-        Vector3Glf goalOrientation(0.0f, 0.0f, 1.0f);
+        int safeMode = 1;
+        int brake = 1;
+        int gripper = 0;
+
+        std::string serialPort;
+        {
+            std::ifstream configFile("config.txt");
+            if (!configFile.is_open())
+                std::cerr << "Cannot open config.txt" << std::endl;
+            std::getline(configFile, serialPort);
+        }
+
+        Serial serial;
+        serial.open(serialPort);
+        //Vector3Glf goal(20.0f, 20.0f, 40.0f);
+        //Vector3Glf goalOrientation(0.0f, 0.0f, 1.0f);
 
         float t = 0.0f;
 
@@ -146,7 +178,7 @@ int main()
                     case sf::Keyboard::Escape:
                         running = false;
                     break;
-                    case sf::Keyboard::D:
+                    /*case sf::Keyboard::D:
                         goal[0] += 1.0f;
                     break;
                     case sf::Keyboard::A:
@@ -163,6 +195,21 @@ int main()
                     break;
                     case sf::Keyboard::Q:
                         goal[2] -= 1.0f;
+                    break;*/
+                    case sf::Keyboard::Q:
+                        safeMode = !safeMode;
+                        sendPoint(serial, arm, safeMode, brake, gripper);
+                    break;
+                    case sf::Keyboard::W:
+                        brake = !brake;
+                        sendPoint(serial, arm, safeMode, brake, gripper);
+                    break;
+                    case sf::Keyboard::E:
+                        gripper = !gripper;
+                        sendPoint(serial, arm, safeMode, brake, gripper);
+                    break;
+                    case sf::Keyboard::Z:
+                        sendPoint(serial, arm, safeMode, brake, gripper);
                     break;
                     default: break;
                     }
@@ -170,17 +217,17 @@ int main()
                 else if (event.type == sf::Event::JoystickMoved) {
                     jointSpeed = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
-                    if (event.joystickMove.axis == sf::Joystick::Z && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::Z && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[0] = event.joystickMove.position * -0.0001;
-                    if (event.joystickMove.axis == sf::Joystick::X && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::X && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[1] = event.joystickMove.position * 0.0001;
-                    if (event.joystickMove.axis == sf::Joystick::Y && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::Y && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[2] = event.joystickMove.position * 0.0001;
-                    if (event.joystickMove.axis == sf::Joystick::R && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::R && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[3] = event.joystickMove.position * 0.0001;
-                    if (event.joystickMove.axis == sf::Joystick::U && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::U && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[4] = event.joystickMove.position * 0.0001;
-                    if (event.joystickMove.axis == sf::Joystick::V && fabs(event.joystickMove.position) > 1.0f)
+                    if (event.joystickMove.axis == sf::Joystick::V && fabs(event.joystickMove.position) > 10.0f)
                         jointSpeed[5] = event.joystickMove.position * 0.0001;
                 }
             }
@@ -224,6 +271,7 @@ int main()
         }
 
         // release resources...
+        serial.close();
     }
     catch (const char* e) { // resource loading error (most likely)
         printf("%s", e);

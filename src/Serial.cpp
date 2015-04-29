@@ -16,15 +16,12 @@
 #include <fstream>
 #include <array>
 #include <vector>
+#include <chrono>
+#include <thread>
 
 Serial::Serial() :
-	input_(),
-	angles_({0, 0, 0, 0, 0, 0}),
-	safemode_(0),
-	brake_(0),
-	gripper_(0)
-{
-}
+	input_()
+{ }
 
 void Serial::open(std::string port) {
 	std::string command;
@@ -41,69 +38,51 @@ void Serial::close() {
 	this->input_.close();
 }
 
-void Serial::setAngles(const std::vector<float>& angles, int safemode, int brake, int gripper) {
+
+void Serial::moveTrajectory(const Trajectory& trajectory) {
+    auto traj = trajectory.getVector();
+
+    for (auto& point : traj) {
+        moveToPoint(point);
+        std::this_thread::sleep_for(std::chrono::milliseconds(point.params[3]));
+    }
+}
+
+void Serial::moveToPoint(const TrajectoryPoint& point) {
 	/*
 	Construct a string with semicolon separated values ending in a newline.
 	*/
-	if(angles.size() != 6) {
-		std::cerr << "Serial error: Invalid angle vector: Expected size 6, got " << angles.size() << std::endl;
-		return;
-	}
 
 	std::stringstream dataStream;
 	for(int i = 0; i < 6; ++i) {
-		dataStream << "j" << i+1 << ": " << angles[i] << ", ";
+		dataStream << "j" << i+1 << ": " << point.angles[i] << ", ";
 	}
-	dataStream << "safemode: " << safemode << ", brake: " << brake << ", gripper: " <<  gripper << std::endl;
+	dataStream << "safemode: " << point.params[0]
+               << ", brake: " << point.params[1]
+               << ", gripper: " <<  point.params[2] << "\r\n";
 	std::string data = dataStream.str();
 	data.erase(data.size()-1);
 	// Echo angles
-	std::cout << data << "\r\n";
+	std::cout << data;
 	// Flush the buffer
     std::cout.flush();
 }
 
-void Serial::parseStatus() {
+TrajectoryPoint Serial::getStatus(void) {
     std::string response = "";
-    std::string temp = "";    
+    std::string temp = "";
     do {
     	response = temp;
     	std::getline(this->input_, temp);
     } while(temp != "");
-   	std::vector<float> angles{0, 0, 0, 0, 0, 0};
-   	int safemode, brake, gripper;
+
+    TrajectoryPoint point;
     int amount = sscanf(response.c_str(), "j1: %f, j2: %f, j3: %f, j4: %f, j5: %f, j6: %f, safemode: %i, brake: %i, gripper: %i",
-    	&angles[0], &angles[1], &angles[2], &angles[3], &angles[4], &angles[5],
-    	&safemode, &brake, &gripper);
-    if(amount == 9) {
-    	this->angles_ = angles;
-    	this->safemode_ = safemode;
-    	this->brake_ = brake;
-    	this->gripper_ = gripper;
-    } else if(response != "") {
+    	&point.angles[0], &point.angles[1], &point.angles[2], &point.angles[3], &point.angles[4], &point.angles[5],
+    	&point.params[0], &point.params[1], &point.params[2]);
+
+    if(amount != 9 && response != "")
     	std::cerr << "Serial error: Invalid input" << std::endl;
-    }
-}
 
-std::vector<float>& Serial::getAngles(){
-	return this->angles_;
-}
-
-int& Serial::getSafemode() {
-	return this->safemode_;
-}
-
-int& Serial::getBrake() {
-	return this->brake_;
-}
-
-int& Serial::getGripper() {
-	return this->gripper_;
-}
-
-void Serial::getEverything(std::vector<float>& angles, int& safemode, int& brake, int& gripper) {
-	angles = this->angles_;
-	safemode = this->safemode_;
-	brake = this->brake_;
-	gripper = this->gripper_;
+    return point;
 }
