@@ -53,6 +53,13 @@ void Arm::setJointTheta(unsigned jointId, float theta, bool recalculate) {
     }
 }
 
+float Arm::getJointTheta(unsigned jointId) const {
+    if (jointId >= joints_.size())
+        return 0.0f;
+
+    return joints_[jointId].getTheta();
+}
+
 void Arm::draw(const Camera& camera) const {
     for (auto i=0u; i<joints_.size(); ++i) {
         if (meshes_[i].first)

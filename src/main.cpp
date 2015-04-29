@@ -113,10 +113,12 @@ int main()
         arm.setJointConstraints(0, 0.0f, 0.0f);
         arm.setJointConstraints(1, PI*0.25f,    PI*1.75f);
         arm.setJointConstraints(2, PI*0.75f,    PI*1.25f);
-        arm.setJointConstraints(3, -PI*1.75f,   PI*1.75f);
+        arm.setJointConstraints(3, -PI*0.75f,   PI*0.75f);
         arm.setJointConstraints(4, -PI*2.0f,    PI*2.0f);
         arm.setJointConstraints(5, PI*0.4f,     PI*1.6f);
         arm.setJointConstraints(6, -PI*2.0f,    PI*2.0f);
+
+        std::array<float, 6> jointSpeed = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
 
         Vector3Glf goal(20.0f, 20.0f, 40.0f);
         Vector3Glf goalOrientation(0.0f, 0.0f, 1.0f);
@@ -165,6 +167,26 @@ int main()
                     default: break;
                     }
                 }
+                else if (event.type == sf::Event::JoystickMoved) {
+                    jointSpeed = { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f };
+
+                    if (event.joystickMove.axis == sf::Joystick::Z && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[0] = event.joystickMove.position * -0.0001;
+                    if (event.joystickMove.axis == sf::Joystick::X && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[1] = event.joystickMove.position * 0.0001;
+                    if (event.joystickMove.axis == sf::Joystick::Y && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[2] = event.joystickMove.position * 0.0001;
+                    if (event.joystickMove.axis == sf::Joystick::R && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[3] = event.joystickMove.position * 0.0001;
+                    if (event.joystickMove.axis == sf::Joystick::U && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[4] = event.joystickMove.position * 0.0001;
+                    if (event.joystickMove.axis == sf::Joystick::V && fabs(event.joystickMove.position) > 1.0f)
+                        jointSpeed[5] = event.joystickMove.position * 0.0001;
+                }
+            }
+
+            for (auto i=0u; i<6; ++i) {
+                arm.setJointTheta(i+1, arm.getJointTheta(i+1) + jointSpeed[i]);
             }
 
             // clear the buffers
@@ -177,7 +199,7 @@ int main()
             jMesh4.render(meshShader, camera, j4, Vector3Glf(0.45f, 0.43f, 0.40f));
             jMesh5.render(meshShader, camera, j5, Vector3Glf(0.22f, 0.23f, 0.24f));
 */
-            arm.solve(goal, goalOrientation, 1000);
+            //arm.solve(goal, goalOrientation, 1000);
             arm.draw(camera);
 /*          j0.draw(camera);
             j1.draw(camera);

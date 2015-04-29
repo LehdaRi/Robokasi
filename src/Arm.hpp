@@ -30,12 +30,14 @@ public:
                       const Vector3Glf& color = Vector3Glf(1.0f, 1.0f, 1.0f));
     void setJointConstraints(unsigned jointId, float lowerLimit, float upperLimit);
     void setJointTheta(unsigned jointId, float theta, bool recalculate = true);
+
+    float getJointTheta(unsigned jointId) const;
+
     void draw(const Camera& camera) const;
 
     void solve(const Vector3Glf& goal,
                const Vector3Glf& toolOrientation,
                unsigned nMaxIterations);
-    //Eigen::Matrix<float, 1, 3> compute_jacovian_segment(int seg_num, Vector3Glf goal_point, Vector3f angle);
 
     Vector3Glf calculateEndEffector(int jointId = -1) const;
     float getMaxLength(void);
