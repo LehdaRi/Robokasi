@@ -42,12 +42,27 @@ void clamp(Eigen::Matrix<T, W, H, Eigen::DontAlign>& matrix, const T& min, const
 //  Clamps all values in given matrix in range specified
 template<typename T, int W, int H>
 void clamp(Eigen::Matrix<T, W, H, Eigen::DontAlign>& matrix, const T& min, const T& max) {
-    for (auto x=0; x<W; ++x)
-        for (auto y=0; y<H; ++y)
+    for (int x=0; x<W; ++x)
+        for (int y=0; y<H; ++y)
             if (matrix(x, y) < min)
                 matrix(x, y) = min;
             else if (matrix(x, y) > max)
                 matrix(x, y) = max;
+}
+
+
+//  Moore-penrose pseudoinverse
+template<typename _Matrix_Type_>
+_Matrix_Type_ pseudoInverse(const _Matrix_Type_ &a, double epsilon =
+std::numeric_limits<double>::epsilon())
+{
+        Eigen::JacobiSVD< _Matrix_Type_ > svd(a ,Eigen::ComputeThinU |
+    Eigen::ComputeThinV);
+        double tolerance = epsilon * std::max(a.cols(), a.rows())
+    *svd.singularValues().array().abs()(0);
+        return svd.matrixV() *  (svd.singularValues().array().abs() >
+    tolerance).select(svd.singularValues().array().inverse(),
+    0).matrix().asDiagonal() * svd.matrixU().adjoint();
 }
 
 
