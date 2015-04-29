@@ -29,6 +29,7 @@ public:
 	int& getSafemode();
 	int& getBrake();
 	int& getGripper();
+	void getEverything(std::vector<float>& angles, int& safemode, int& brake, int& gripper);
 
 private:
 	std::ifstream input_;

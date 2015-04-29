@@ -100,3 +100,10 @@ int& Serial::getBrake() {
 int& Serial::getGripper() {
 	return this->gripper_;
 }
+
+void Serial::getEverything(std::vector<float>& angles, int& safemode, int& brake, int& gripper) {
+	angles = this->angles_;
+	safemode = this->safemode_;
+	brake = this->brake_;
+	gripper = this->gripper_;
+}
