@@ -23,11 +23,19 @@ public:
 	Serial();
 	void open(std::string port);
 	void close();
-	void pushAngles(const std::vector<float>& angles);
+	void setAngles(const std::vector<float>& angles, int safemode, int brake, int gripper);
+	void parseStatus();
+	std::vector<float>& getAngles();
+	int& getSafemode();
+	int& getBrake();
+	int& getGripper();
 
 private:
 	std::ifstream input_;
-	std::ofstream output_;
+	std::vector<float> angles_;
+	int safemode_;
+	int brake_;
+	int gripper_;
 };
 
 #endif
